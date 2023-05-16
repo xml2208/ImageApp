@@ -8,17 +8,19 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.*
@@ -31,7 +33,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            App(modifier = Modifier.padding(15.dp))
+            App(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(15.dp)
+            )
         }
     }
 
@@ -41,17 +47,12 @@ class MainActivity : AppCompatActivity() {
 
         val cameraPermissionState = rememberMultiplePermissionsState(
             permissions = listOf(
-                android.Manifest.permission.CAMERA,
-                android.Manifest.permission.READ_CONTACTS
+                android.Manifest.permission.CAMERA, android.Manifest.permission.READ_CONTACTS
             )
         )
-        val context = LocalContext.current
-
         val isImageAvailable = remember { mutableStateOf(false) }
         val imageUri = FileProvider.getUriForFile(
-            context,
-            BuildConfig.APPLICATION_ID + ".provider",
-            createImageFile()
+            LocalContext.current, BuildConfig.APPLICATION_ID + ".provider", createImageFile()
         )
         var capturedImageUri by remember {
             mutableStateOf<Uri?>(Uri.EMPTY)
@@ -64,36 +65,44 @@ class MainActivity : AppCompatActivity() {
             capturedImageUri = imageUri
             Log.d("xml2208", "$capturedImageUri")
         }
+        Box(modifier = modifier) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = modifier,
+            ) {
+                Button(onClick = {
+                    cameraPermissionState.launchMultiplePermissionRequest()
+                }) {
+                    Text(stringResource(id = R.string.request_permission_btn))
+                }
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier,
-        ) {
-            Button(onClick = {
-                cameraPermissionState.launchMultiplePermissionRequest()
-            }) {
-                Text(stringResource(id = R.string.request_permission_btn))
+                cameraPermissionState.permissions.forEach { perm ->
+                    CheckingPermissionStatus(permissionState = perm)
+                }
+
+
+                if (isImageAvailable.value && capturedImageUri != null) {
+                    AsyncImage(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(15.dp),
+                        model = capturedImageUri,
+                        contentDescription = stringResource(R.string.captured_image)
+                    )
+                }
             }
-
-            cameraPermissionState.permissions.forEach { perm ->
-                CheckingPermissionStatus(permissionState = perm)
-            }
-
             if (cameraPermissionState.allPermissionsGranted) {
                 Button(
                     onClick = {
                         cameraLauncher.launch(imageUri)
                     },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray, contentColor = Color.Black)
                 ) {
                     Text(text = stringResource(R.string.open_camera_button))
                 }
-            }
-            if (isImageAvailable.value && capturedImageUri != null) {
-                AsyncImage(
-                    modifier = Modifier.fillMaxSize(),
-                    model = capturedImageUri,
-                    contentDescription = stringResource(R.string.captured_image)
-                )
             }
         }
     }
@@ -102,12 +111,9 @@ class MainActivity : AppCompatActivity() {
         val timeStamp = SimpleDateFormat("ddMMyyyy", Locale.US).format(Date())
         val imageFileName = timeStamp + "_"
         return File.createTempFile(
-            imageFileName,
-            ".jpg",
-            externalCacheDir
+            imageFileName, ".jpg", externalCacheDir
         )
     }
-
 
     @OptIn(ExperimentalPermissionsApi::class)
     @Composable
@@ -118,24 +124,37 @@ class MainActivity : AppCompatActivity() {
             android.Manifest.permission.CAMERA -> {
                 when {
                     permissionState.status.isGranted -> {
-                        Text(text = stringResource(R.string.camera_perm_granted))
+                        Text(text = stringResource(R.string.camera_perm_granted), fontSize = 20.sp)
                     }
                     permissionState.status.shouldShowRationale -> {
-                        Text(text = stringResource(R.string.alerting_camera_is_needed))
+                        Text(
+                            text = stringResource(R.string.alerting_camera_is_needed),
+                            fontSize = 20.sp
+                        )
                     }
                 }
             }
             android.Manifest.permission.READ_CONTACTS -> {
                 when {
                     permissionState.status.isGranted -> {
-                        Text(text = stringResource(R.string.contacts_perm_granted))
+                        Text(
+                            text = stringResource(R.string.contacts_perm_granted), fontSize = 20.sp
+                        )
                     }
                     permissionState.status.shouldShowRationale -> {
-                        Text(text = stringResource(R.string.alerting_contacts_is_needed))
+                        Text(
+                            text = stringResource(R.string.alerting_contacts_is_needed),
+                            fontSize = 20.sp
+                        )
                     }
                 }
             }
         }
+    }
 
+    @Preview
+    @Composable
+    fun ImageAppPreview() {
+        App(modifier = Modifier)
     }
 }
