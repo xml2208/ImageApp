@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ImageApp</string>
+    <string name="open_camera_button">Open Camera</string>
+    <string name="request_permission_btn">request permission</string>
+    <string name="camera_perm_granted">Camera permission granted</string>
+    <string name="alerting_camera_is_needed">please give permission, camera is needed!!</string>
+    <string name="contacts_perm_granted">Contacts permission granted</string>
+    <string name="alerting_contacts_is_needed">please give permission, contacts is needed!!</string>
+    <string name="captured_image">capturedImage</string>
+</resources>
